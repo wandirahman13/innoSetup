@@ -86,33 +86,24 @@ Source: "E:\Software\ODBC\msodbcsql-x64.msi"; DestDir: "{app}"; Check: Is64BitIn
 Source: "E:\Software\ODBC\msodbcsql-x86.msi"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: solidbreak
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
-; [code]
-;procedure RunDriverOdbc;
-;var
-;  ResultCode: Integer;
-;begin
-;  if IsWin64 then
-;    begin
-;     Exec(ExpandConstant('{app}\Driver\msodbcsql-x64.msi'), '', '', SW_SHOWNORMAL,
-;     ewWaitUntilTerminated, ResultCode)
-;    end
-;  else
-;    begin
-;      Exec(ExpandConstant('{app}\Driver\msodbcsql-x86.msi'), '', '', SW_SHOWNORMAL,
-;      ewWaitUntilTerminated, ResultCode);
-;     end;
-;end;
-
 [Icons]
 Name: "{commonprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 
-;[Tasks]
-;Name: "install_odbc"; Description: "Install ODBC 13 drivers"; GroupDescription: "External drivers:";
-
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-Filename: "{sys}\msiexec.exe"; Parameters: "/a ""{app}\msodbcsql-x64.msi"" /passive /norestart /qn"; StatusMsg: "Installing ODBC 13 driver"; Check: IsWin64; Flags: 64bit skipifdoesntexist waituntilterminated;
-Filename: "{sys}\msiexec.exe"; Parameters: "/a ""{app}\msodbcsql-x86.msi"" /passive /norestart /qn"; StatusMsg: "Installing ODBC 13 driver"; Check: not IsWin64; Flags: 32bit skipifdoesntexist waituntilterminated;
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; BeforeInstall: SetProgressMax(10); AfterInstall: UpdateProgress(45); Flags: nowait postinstall skipifsilent
+Filename: "{sys}\msiexec.exe"; Parameters: "/a ""{app}\msodbcsql-x64.msi"" /passive /norestart /qn"; StatusMsg: "Installing ODBC 13 driver"; Check: IsWin64; AfterInstall: UpdateProgress(100); Flags: 64bit skipifdoesntexist waituntilterminated;
+Filename: "{sys}\msiexec.exe"; Parameters: "/a ""{app}\msodbcsql-x86.msi"" /passive /norestart /qn"; StatusMsg: "Installing ODBC 13 driver"; Check: not IsWin64; AfterInstall: UpdateProgress(100); Flags: 32bit skipifdoesntexist waituntilterminated;
 
+[code]
+
+Procedure SetProgressMax(Ratio :Integer);
+begin
+  WizardForm.ProgressGauge.Max:= WizardForm.ProgressGauge.Max * Ratio;
+end;
+
+Procedure UpdateProgress(Position :Integer);
+begin
+  WizardForm.ProgressGauge.Position:= Position * WizardForm.ProgressGauge.Max div 100;
+end;
